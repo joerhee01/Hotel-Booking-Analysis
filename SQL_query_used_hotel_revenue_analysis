@@ -1,0 +1,148 @@
+USE hotel_db
+GO
+
+
+-- DATASET SOURCE: https://absentdata.com/data-analysis/where-to-find-data/
+-- I HAVE ORIGINALLY REFERRED TO THIS TUTORIAL BY ABSENT DATA BUT I HAVE FURTHER EXPANDED MY SQL QUERY AS HIS TUTORIAL DOES NOT CALCULATE REVENUE WITH MEAL COST AND DISCOUNT RATE AND MOSTLY DOES HIS QUERY IN POWER QUERY: https://www.youtube.com/watch?v=S2zBHmkRbhY&list=PLi5spBcf0UMW0t5yEjMwk2IKXAzVtB0Im
+-- I WANTED TO FURTHER EXPLORE THIS DATASET BY PRACTICING AND APPLYING MY SQL LESSONS IN THE PAST AND ADDING MY OWN FLAVOR TO THE DATA VISUALIZATION. 
+
+-- BUSINESS NEEDS:
+-- 1. IS OUR HOTEL REVENUE GROWING BY YEAR?
+
+-- 2. SHOULD WE INCREASE OUR PARKING LOT SIZE?
+
+-- 3. WHAT TRENDS CAN WE SEE IN THE DATA? 
+
+
+
+-- QUERIES:
+
+-- COMBINE ALL TABLES AND STORE IT INTO A NEW TABLE FOR QUERYING:
+WITH hotels AS -- USING CTE TO COMBINE 2018, 2019, AND 2020 HOTEL TABLES. 
+(
+SELECT * 
+FROM dbo.[2018]
+UNION
+SELECT * 
+FROM dbo.[2019]
+UNION
+SELECT * 
+FROM dbo.[2020]
+)
+SELECT h.*,
+	ms.discount, -- I NEED THE DISCOUNT RATE FROM THE MARKET SEGMENT TABLE TO CALCULATE THE REVENUE.
+	mc.cost, -- I NEED THE MEAL COST FROM THE MEAL COST TABLE TO CALCULATE THE REVENUE. 
+	CASE WHEN (h.arrival_date_month = 'December') THEN 12
+		WHEN (h.arrival_date_month = 'November') THEN 11
+		WHEN (h.arrival_date_month= 'October') THEN 10
+		WHEN (h.arrival_date_month = 'September') THEN 9
+		WHEN (h.arrival_date_month = 'August') THEN 8
+		WHEN (h.arrival_date_month = 'July') THEN 7
+		WHEN (h.arrival_date_month = 'June') THEN 6
+		WHEN (h.arrival_date_month = 'May') THEN 5
+		WHEN (h.arrival_date_month = 'April') THEN 4
+		WHEN (h.arrival_date_month = 'March') THEN 3
+		WHEN (h.arrival_date_month = 'February') THEN 2
+		WHEN (h.arrival_date_month = 'January') THEN 1
+		ELSE 'Verify the months name.'
+	END AS arrival_date_month_num, -- ADDING ARRIVAL_DATE_MONTH COLUM IN NUMERIC FORMAT FOR FLEXIBILITY OF MY QUERY LATER.
+	(stays_in_week_nights + stays_in_weekend_nights) AS total_nights, -- CALCULATING THE TOTAL NIGHTS STAYED BY GUEST TO CALCULATE REVENUE.
+	(adults + children + babies) AS total_guest, -- CALCULATING TOTAL # OF GUEST TO CALCULATE TOTAL MEAL COST.
+	(adults + children + babies) * cost AS total_meal_cost, -- CALCULATING TOTAL MEAL COST BY TOTAL GUEST * MEAL COST TO CALCULATE REVENUE.
+	CASE WHEN (h.is_canceled = 0) THEN ((stays_in_week_nights + stays_in_weekend_nights) * (h.adr * (1 - ms.discount))) + ((h.adults + h.children + h.babies) * mc.cost)
+		WHEN (h.is_canceled = 1 AND h.deposit_type = 'Non Refund') THEN 250
+		ELSE 0
+	END AS revenue, -- THIS DATASET DID NOT INCLUDE THE REVENUE COLUMN SO I CREATED MY OWN. 
+					-- MY CALCULATION FOR REVENUE: MULTIPLY TOTAL NIGHTS BY AVERAGE DAILY RATE (WITH DISCOUNT RATE) THEN ADD THE VALUE TOGETHER WITH TOTAL MEAL COST. IF GUEST CANCELED THEIR RESERVERATION, THEN REVENUE EQUALS 0 UNLESS DEPOSIT TYPE IS "NON-REFUNDABLE", IN WHICH CASE REVENUE EQUALS 250 FROM THE NON-REFUNDABLE SECURITY DEPOSIT. NOTE: I MADE UP THE 250 SECURITY DEPOSIT TO REPLICATE REAL LIFE SCENARIO.
+	CONVERT(
+			DATE, 
+			(CONVERT(VARCHAR(50), h.arrival_date_year)) 
+			+ '-' 
+			+ h.arrival_date_month
+			+ '-' 
+			+ (CONVERT(VARCHAR(50), h.arrival_date_day_of_month))
+			) AS arrival_date -- THIS DATASET CAME WITH SEPARATE DATE COLUMN BY YEAR, MONTHS, AND DAYS. I HAD CREATED A COMBINED DATE COLUMN SO I CAN ADD RELATIONSHIP WITH A DATE TABLE IN POWER BI LATER.
+INTO bookings -- CREATE A NEW TABLE WITH THE ALL MY QUERIES TO IMPORT LATER INTO POWER BI. 
+FROM hotels AS h
+LEFT JOIN dbo.market_segment AS ms 
+	ON ms.market_segment = h.market_segment -- JOIN MARKET SEGMENT TABLE TO GET DISCOUNT RATE FOR REVENUE CALCULATION. 
+LEFT JOIN dbo.meal_cost AS mc
+	ON mc.meal = h.meal -- JOIN MEAL COST TABLE TO GET MEAL COST FOR REVENUE CALCULATION. 
+
+-- TEST NEW TABLE. I WILL USE THIS TO IMPORT DATA INTO POWER BI.
+SELECT *
+FROM bookings
+ORDER BY arrival_date, booking_id
+
+-- DROP NEW TABLE BEFORE ALTERING. 
+DROP TABLE bookings
+
+-- ADD PK SINCE THIS DATASET DOES NOT HAVE A UNIQUE IDENTIFIER IN EACH ROWS: 
+ALTER TABLE bookings
+ADD booking_ID INT IDENTITY (1,1);
+
+ALTER TABLE bookings
+ADD CONSTRAINT PK_bookings PRIMARY KEY CLUSTERED (booking_ID)
+
+-- JUST PLAYING AROUND WITH DATA TO ANSWER THE ORIGINAL BUSINESS QUESTION IN SQL: 
+
+-- 1. IS OUR HOTEL REVENUE GROWING BY YEAR?
+-- AT A QUICK GLANCE: I WOULD SAY YES THE REVENUE IS GROWING. I CAN PROBABLY GROUP BY MONTHS AS WELL TO VERIFY THE COMPLETENESS AND ACCURACY OF THIS DATASET. 
+SELECT arrival_date_year,
+	hotel,
+	ROUND(SUM(revenue), 2) AS "revenue (in dollars)"
+FROM bookings
+GROUP BY arrival_date_year, hotel
+ORDER BY arrival_date_year, hotel
+
+-- 2. SHOULD WE INCREASE OUR PARKING LOT SIZE?
+-- IT LOOKS LIKE THE GUEST REQUIRES MORE PARKING SPACE. BUT THIS CAN ONLY BE DETERMINED IF I KNOW THE MAXIMUM PARKING SPACE OCCUPATION. 
+SELECT arrival_date_year,
+	hotel,
+	SUM(required_car_parking_spaces) AS total_parking_space_occupation
+FROM bookings
+GROUP BY arrival_date_year, hotel
+ORDER BY arrival_date_year, hotel
+
+-- 3. WHAT TRENDS CAN WE SEE IN THE DATA? 
+-- PROBABLY BEST TO VISUALIZE THIS WITH POWER BI TO FIND TRENDS. 
+-- HERE ARE SOME QUERIES THAT CAN BE POTENTIALLY USED FOR DATA VISUALIZATION:
+
+-- TOP 5 TRAVEL AGENTS THAT BRINGS IN THE MOST REVENUE TO THE HOTEL.
+SELECT TOP 5 agent,
+	 ROUND(SUM(revenue), 2) AS total_revenue
+FROM bookings
+GROUP BY agent
+ORDER BY total_revenue DESC
+
+-- TOP 5 TRAVEL COMPANY THAT BRINGS IN THE MOST REVENUE TO THE HOTEL.
+SELECT TOP 5 company,
+	 ROUND(SUM(revenue), 2) AS total_revenue
+FROM bookings
+GROUP BY company
+ORDER BY total_revenue DESC
+
+-- BUSIEST MONTHS 
+SELECT arrival_date_month,
+	SUM(total_guest) AS total_guest
+FROM bookings
+GROUP BY arrival_date_month
+ORDER BY total_guest DESC
+
+-- TOP 5 GUEST COUNTRIES THAT BRINGS IN THE MOST REVENUE TO THE HOTEL.
+SELECT TOP 5 country,
+	 ROUND(SUM(revenue), 2) AS total_revenue
+FROM bookings
+GROUP BY country
+ORDER BY total_revenue DESC
+
+-- CANCELATION RATE.
+
+DECLARE @count_of_canceled AS FLOAT, 
+	    @count_of_non_canceled  AS FLOAT, 
+		@count_of_rows AS FLOAT
+SET @count_of_non_canceled = (SELECT COUNT(is_canceled) FROM bookings WHERE is_canceled = 0 AND arrival_date_year = 2019)
+SET @count_of_canceled = (SELECT COUNT(is_canceled) FROM bookings WHERE is_canceled = 1)
+SET @count_of_rows = (SELECT COUNT(booking_id) FROM bookings)
+
+SELECT (@count_of_canceled / @count_of_rows) * 100

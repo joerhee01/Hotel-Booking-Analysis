@@ -59,7 +59,7 @@ Conduct a thorough analysis of a hotel revenue dataset to identify trends and in
 - Slicer added to enable filtering by hotel type, year, and month for deeper insight into the report.
 
 # Dashboard: #
-![image](https://user-images.githubusercontent.com/28738970/233808775-ed735227-8499-480b-8651-e76ee4d0e475.png)
+![image](https://user-images.githubusercontent.com/28738970/233811688-68e34032-6800-4c5e-9918-fc978cc61cbc.png)
 
 # My Analysis: #
 

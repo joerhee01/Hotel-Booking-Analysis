@@ -66,32 +66,47 @@ Conduct a thorough analysis of a hotel revenue dataset to identify trends and in
 - *Q1. Is our hotel revenue growing by year?*
 
 - The revenue of the hotel appears to be increasing over the years, with 2019 showing a particularly high amount that could be considered an outlier. To gain more insights into why 2019 had such high revenue, additional data from the source may be necessary. Nonetheless, the trend indicates a positive growth in revenue.
-
+  
+  (*Total Revenue Trend from 2018 to 2020*)
+  
   ![image](https://user-images.githubusercontent.com/28738970/233808997-99366179-5237-48bd-8e03-bb2b873fde4e.png)
-
+  
+  
 - *Q2. Should we increase our parking lot size?*
 
 - Based on the data, it doesn't appear that the parking requirements are increasing significantly to warrant an expansion of the parking lot size, particularly if the hotel was able to accommodate the guest parking needs during the high-revenue year of 2019.
 
+  (*Parking Required by Guest Trend from 2018-2020*)
+  
   ![image](https://user-images.githubusercontent.com/28738970/233810262-40263b70-7642-4d7e-8f52-8ed415837c22.png)
 
 - *Q3. What trend can we see in the data?*
 
 - Based on my analysis, it appears that there is an inverse relationship between the average daily rate and hotel occupancy. As the average daily rate increases, hotel occupancy decreases. However, despite the lower hotel occupancy, there is an increase in revenue associated with the higher rate. Therefore, finding a balance between the average daily rate and hotel occupancy is important in maximizing revenue. By finding the optimal rate, the hotel can attract more customers while still generating sufficient revenue.
 
+  (*Hotel Occupancy, Revenue Rate, and Average Daily Rate Comparison*)
+  
   ![image](https://user-images.githubusercontent.com/28738970/233810386-1133d586-3103-4b4d-90b0-32cb7641682d.png)
 
 - Based on the analysis of the hotel revenue dataset, the following insights were uncovered:
   - Portugal is the top revenue-generating country for the hotel, followed by Great Britain, France, and Spain.
   - The most effective distribution channel for generating revenue is through travel agencies, followed by direct bookings and then corporate bookings.
-
+  
+  (*Top Revenue Bringing Country Distributed By the Distribution Channel*)
+  
   ![image](https://user-images.githubusercontent.com/28738970/233810413-56c69dc5-f762-47ac-a288-9cfae27c23bf.png)
 
-- August is the most profitable month in all three years (2018, 2019, and 2020). We should investigate what draws guests during this month. Additionally, I noticed that April, August, and October require the most parking space. It would be wise to plan for this to avoid issues. However, the data for 2018 and 2020 are incomplete, and having complete data may provide better insights.
-
+- August is the most profitable month in all three years (2018, 2019, and 2020). We should investigate what draws guests during this month. Additionally, I noticed that Q3 and Q4 periods require the most parking space. It would be wise to plan for this ahead to avoid problems with parking spaces. However, the data for 2018 and 2020 are incomplete, and having complete data may provide better insights.
+  
+  (*2020 Revenue and Parking Matrix*)
+  
   ![image](https://user-images.githubusercontent.com/28738970/233810565-ce51455b-6039-4924-af37-f464e85fab4c.png)
 
+  (*2019 Revenue and Parking Matrix*)
+  
   ![image](https://user-images.githubusercontent.com/28738970/233810915-86458cf0-7412-4586-9627-5f4852b4348d.png)
 
+  (*2018 Revenue and Parking Matrix*)
+  
   ![image](https://user-images.githubusercontent.com/28738970/233810598-9708c1f2-262b-4ba9-95ee-07d91f425077.png)
 
